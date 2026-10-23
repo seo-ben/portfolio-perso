@@ -1,0 +1,37 @@
+name: Déploiement automatique LWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Compiler le projet (Vite production)
+        run: npm run build
+
+      - name: Déployer sur le serveur LWS via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.LWS_FTP_SERVER }}
+          username: ${{ secrets.LWS_FTP_USERNAME }}
+          password: ${{ secrets.LWS_FTP_PASSWORD }}
+          server-dir: ${{ secrets.LWS_SERVER_DIR || 'sewoda-komla.digitalforges.org/' }}
+          local-dir: ./dist/
+          dangerous-clean-slate: false
